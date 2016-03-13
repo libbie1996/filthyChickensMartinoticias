@@ -4,14 +4,60 @@
 
 	class Martinoticias extends Service
 	{
-		/**
-		 * Function executed when the service is called
-		 *
-		 * @param Request
-		 * @return Response
-		 * */
 
-		private function listArticles(Request $request, $query)
+		/**
+		 * Searches for articles using the search API on Martinoticias
+		 */
+		private function searchArticles($query)
+		{
+			// Setup client
+			$client = new Client();
+
+			// Keep integral part of query
+			$query = explode(" ", $query);
+			array_shift($query);
+			$query = urlencode(implode(" ", $query));
+
+			// Fetch json data from search API
+			$apiData = file_get_contents("http://www.martinoticias.com/post.api?&startrow=0&rowlimit=10&searchtype=all&keywords=$query&zone=allzones&order=date");
+			$jsonData = json_decode($apiData, true);
+
+			// Fetch rows of data
+			$rows = $jsonData['d']['postquery']['PrimaryQueryResult']['RelevantResults']['Table']['Rows']['results'];
+
+			$data = array();
+			$i = 0;
+			$articles = array();
+
+			// Search through each row, fetch each cell, store as associative array.
+			foreach ($rows as $row) {
+				foreach ($row['Cells']['results'] as $cell) {
+					$data[$cell['Key']] = $cell['Value'];
+				}
+
+				$articles[] = array(
+					'pubDate'      => $data['searchArticlePubDate'],
+					'description'  => $data['HitHighlightedSummary'],
+					'category'     => explode(";", $data['searchArticleZone']),
+					'title'        => $data['searchArticleTitle'],
+					'tags'         => $data['searchArticleTag'],
+					'author'       => $data['searchArticleAuthor'],
+					'link'         => implode("/",
+										array("content",
+										      $data['searchArticleSlug'],
+											  $data['searchArticleId'])
+									  )
+				);
+			}
+
+			// Return response content
+			$responseContent = array(
+				'articles' => $articles
+			);
+			return $responseContent;
+		}
+
+		private function listArticles($query)
 		{
 			// Setup client
 			$client = new Client();
@@ -36,6 +82,11 @@
 						$link = $item->filter('link')->text();
 						$pubDate = $item->filter('pubDate')->text();
 						$description = $item->filter('description')->text();
+						$author = "desconocido";
+						if ($item->filter('author')->count() > 0) {
+							$authorString = explode(" ", trim($item->filter('author')->text()));
+							$author = substr($authorString[1], 1, strpos($authorString[1], ")") - 1) . " ({$authorString[0]})";
+						}
 
 						$articles[] = array(
 							"title"       => $title,
@@ -61,13 +112,15 @@
 			unset($url[2]);
 			return implode("/", $url);
 		}
+		/**
+		 * Function executed when the service is called
+		 *
+		 * @param Request
+		 * @return Response
+		 * */
 
 		public function _main(Request $request)
 		{
-
-			print_r($this->urlSplit("http://www.martinoticias.com/content/dia-mundial-contra-la-censura-en-internet-apunta-a-cuba/117177.html"));
-			exit;
-
 			if(empty($request->query)) {
 				// create a new client
 				$client = new Client();
@@ -107,7 +160,7 @@
 
 				$categoryLink = array();
 
-				for ($i=0; $i < count($title); $i++) { 
+				for ($i=0; $i < count($title); $i++) {
 					$categoryLink[$i] = array();
 					foreach ($category[$i] as $currCategory) {
 						$categoryLink[$i][] = "http://127.0.0.1:8080/run/display?subject=martinoticias category $currCategory";
@@ -204,10 +257,18 @@
 			}
 
 			if (explode(" ", strtoupper(trim($request->query)))[0] == "CATEGORY") {
-				$responseContent = $this->listArticles($request, $request->query);
+				$responseContent = $this->listArticles($request->query);
 				$response = new Response();
 				$response->setResponseSubject("[RESPONSE_EMAIL_SUBJECT]");
-				$response->createFromTemplate("cat_articles.tpl", $responseContent);
+				$response->createFromTemplate("catArticles.tpl", $responseContent);
+				return $response;
+			}
+
+			if (explode(" ", strtoupper(trim($request->query)))[0] == "SEARCH") {
+				$responseContent = $this->searchArticles($request->query);
+				$response = new Response();
+				$response->setResponseSubject("[RESPONSE_EMAIL_SUBJECT]");
+				$response->createFromTemplate("catArticles.tpl", $responseContent);
 				return $response;
 			}
 		}
