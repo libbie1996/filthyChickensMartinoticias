@@ -42,6 +42,7 @@
 			$articles = array();
 
 			// Search through each row, fetch each cell, store as associative array.
+			$categories = array();
 			foreach ($rows as $row) {
 				foreach ($row['Cells']['results'] as $cell) {
 					$data[$cell['Key']] = $cell['Value'];
@@ -58,12 +59,19 @@
 									$data['searchArticleID'])
 								) . ".html";
 				$link = $this->utils->getLinkToService("MARTINOTICIAS", "STORY $link");
+				foreach (explode(";", $data['searchArticleZone']) as $cat) {
+					$categories[] = array(
+						'name' => $cat,
+						'link' => $this->utils->getLinkToService("MARTINOTICIAS", "CATEGORY $cat")
+					);
+				}
 
 				// Store list of articles
 				$articles[] = array(
 					'pubDate'      => $data['searchArticlePubDate'],
 					'description'  => $data['HitHighlightedSummary'],
-					'category'     => explode(";", $data['searchArticleZone']),
+					//'category'     => explode(";", $data['searchArticleZone']),
+					'category'     => $categories,
 					'title'        => $data['searchArticleTitle'],
 					'tags'         => $data['searchArticleTag'],
 					'author'       => $author,
@@ -215,6 +223,21 @@
 				});;
 			}
 
+			$comments = array();
+			if ($crawler->filter('.forum_comment')->count() != 0) {
+				$comments = $crawler->filter('.forum_comment')->each(function($node, $i) {
+					$author = $node->filter('.forumUserName')->text();
+					$date = $node->filter('.date')->text();
+					$body = $node->filter('.forum_comment_body')->text();
+
+					return array(
+						"author" => $author,
+						"date" => $date,
+						"body" => $body
+					);
+				});
+			}
+
 			$imgName = $this->utils->generateRandomHash() . "." . explode(".", explode("/", trim($imgUrl))[count(explode("/", trim($imgUrl))) - 1])[count(explode(".", explode("/", trim($imgUrl))[count(explode("/", trim($imgUrl))) - 1])) - 1];
 			$img = \Phalcon\DI\FactoryDefault::getDefault()->get('path')['root'] . "/temp/$imgName";
 			file_put_contents($img, file_get_contents($imgUrl));
@@ -225,7 +248,8 @@
 				"title" => $title,
 				"intro" => $intro,
 				"img" => $img,
-				"content" => $content
+				"content" => $content,
+				"comments" => $comments
 			);
 			return $responseContent;
 		}
