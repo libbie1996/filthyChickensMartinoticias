@@ -194,12 +194,20 @@
 			$crawler = $client->request('GET', "http://www.martinoticias.com/" . explode(" ", trim($query))[1]);
 
 			// search for result
-			$title = $crawler->filter('#article h1')->text();
-			$intro = $crawler->filter('#article .article_txt_intro')->text();
-			$imgUrl = $crawler->filter('#article .contentImage img')->attr("src");
-			$content = $crawler->filter('#article .articleContent .zoomMe p')->each(function($content, $i) {
-				return $content->text();
-			});;
+			if ($crawler->filter('#article h1')->count() != 0) {
+				$title = $crawler->filter('#article h1')->text();
+			}
+			if ($crawler->filter('#article .article_txt_intro')->count() != 0) {
+				$intro = $crawler->filter('#article .article_txt_intro')->text();
+			}
+			if ($crawler->filter('#article .contentImage img')->count() != 0) {
+				$imgUrl = $crawler->filter('#article .contentImage img')->attr("src");
+			}
+			if ($crawler->filter('#article .articleContent .zoomMe p')->count() != 0) {
+				$content = $crawler->filter('#article .articleContent .zoomMe p')->each(function($content, $i) {
+					return $content->text();
+				});;
+			}
 
 			$imgName = $this->utils->generateRandomHash() . "." . explode(".", explode("/", trim($imgUrl))[count(explode("/", trim($imgUrl))) - 1])[count(explode(".", explode("/", trim($imgUrl))[count(explode("/", trim($imgUrl))) - 1])) - 1];
 			$img = \Phalcon\DI\FactoryDefault::getDefault()->get('path')['root'] . "/temp/$imgName";
