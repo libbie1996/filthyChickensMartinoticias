@@ -42,8 +42,8 @@
 			$articles = array();
 
 			// Search through each row, fetch each cell, store as associative array.
-			$categories = array();
 			foreach ($rows as $row) {
+				$categories = array();
 				foreach ($row['Cells']['results'] as $cell) {
 					$data[$cell['Key']] = $cell['Value'];
 				}
@@ -153,11 +153,11 @@
 				if ($item->filter('category')->text() != "Fotogalerías") {
 					$title = $item->filter('title')->text();
 					$description = $item->filter('description')->text();
-					$link = $this->utils->getLinkToService("MARTINOTICIAS", "STORY {$this->urlSplit($item->filter('link')->text())}"); 
+					$link = $this->utils->getLinkToService("MARTINOTICIAS", "STORY {$this->urlSplit($item->filter('link')->text())}");
 					$pubDate = $item->filter('pubDate')->text();
 					$category = $item->filter('category')->each(function($category, $j) {
 							return $category->text();
-					}); 
+					});
 					if ($item->filter('author')->count() == 0) {
 						$author = "desconocido";
 					} else {
