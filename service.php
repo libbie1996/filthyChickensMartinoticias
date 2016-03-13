@@ -274,6 +274,14 @@
 			}
 
 			if(explode(" ", strtoupper(trim($request->query)))[0] == "STORY") {
+
+				if (explode("/", explode(" ", strtoupper(trim($request->query)))[1])[0] == "MEDIA") {
+					$responseContent = array("chicken" => "filthy");
+					$response = new Response();
+					$response->setResponseSubject("[RESPONSE_EMAIL_SUBJECT]");
+					$response->createFromTemplate("storyMedia.tpl", $responseContent);
+					return $response;
+				}
 				$responseContent = $this->story($request->query);
 				$response = new Response();
 				$response->setResponseSubject("[RESPONSE_EMAIL_SUBJECT]");
