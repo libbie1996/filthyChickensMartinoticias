@@ -97,7 +97,7 @@
 				$item->filter('category')->each(function($cat, $i) use (&$articles, $query, $item) {
 					if (strtoupper($cat->text()) == strtoupper($query)) {
 						$title = $item->filter('title')->text();
-						$link = $item->filter('link')->text();
+						$link = $this->utils->getLinkToService("MARTINOTICIAS", "STORY {$this->urlSplit($item->filter('link')->text())}");
 						$pubDate = $item->filter('pubDate')->text();
 						$description = $item->filter('description')->text();
 						$author = "desconocido";
@@ -166,7 +166,7 @@
 			for ($i=0; $i < count($title); $i++) {
 				$categoryLink[$i] = array();
 				foreach ($category[$i] as $currCategory) {
-					$categoryLink[$i][] = "http://127.0.0.1:8080/run/display?subject=martinoticias category $currCategory";
+					$categoryLink[$i][] = $this->utils->getLinkToService("MARTINOTICIAS", "category $currCategory");
 				}
 			}
 
