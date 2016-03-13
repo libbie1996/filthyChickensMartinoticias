@@ -134,60 +134,6 @@
 			// create a crawler
 			$crawler = $client->request('GET', "http://www.martinoticias.com/api/epiqq");
 
-			/*
-			// search for result
-			$title = $crawler->filter('item title')->each(function($title, $i) {
-				return $title->text();
-			});
-			$description = $crawler->filter('item description')->each(function($description, $i) {
-				return $description->text();
-			});
-			$link = $crawler->filter('item link')->each(function($link, $i) {
-				return $this->utils->getLinkToService("MARTINOTICIAS", "STORY {$this->urlSplit($link->text())}");
-			});
-			$pubDate = $crawler->filter('item pubDate')->each(function($pubDate, $i) {
-				return $pubDate->text();
-			});
-			$exclude = array();
-			$category = $crawler->filter('item')->each(function($item, $i) use (&$exclude) {
-				return $item->filter('category')->each(function($category, $j) use (&$exclude &$i) {
-					if ($category->text() == "Fotogalerías") {
-						$exclude[] = $i;
-					}
-					return $category->text();
-				});
-			});
-			$author = $crawler->filter('item')->each(function($item, $i) {
-				if ($item->filter('author')->count() == 0) {
-					return "desconocido";
-				} else {
-					$authorString = explode(" ", trim($item->filter('author')->text()));
-					return substr($authorString[1], 1, strpos($authorString[1], ")") - 1) . " ({$authorString[0]})";
-				}
-			});
-
-			$categoryLink = array();
-
-			for ($i=0; $i < count($title); $i++) {
-				$categoryLink[$i] = array();
-				foreach ($category[$i] as $currCategory) {
-					$categoryLink[$i][] = $this->utils->getLinkToService("MARTINOTICIAS", "category $currCategory");
-				}
-			}
-
-			// create a json object to send to the template
-			$responseContent = array(
-				"title" => $title,
-				"description" => $description,
-				"link" => $link,
-				"pubDate" => $pubDate,
-				"category" => $category,
-				"categoryLink" => $categoryLink,
-				"author" => $author
-			);
-
-			*/
-
 			$articles = array();
 			$crawler->filter('item')->each(function($item, $i) use (&$articles) {
 				if ($item->filter('category')->text() != "Fotogalerías") {
