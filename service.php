@@ -10,19 +10,31 @@
 		 */
 		private function searchArticles($query)
 		{
+			$apiUrl = "http://www.martinoticias.com/post.api?";
 			// Setup client
 			$client = new Client();
 
 			// Keep integral part of query
 			$query = explode(" ", $query);
 			array_shift($query);
+			$rowLimit = 20;
+
+			// Set starting row
+			if (count($query) > 1)
+				$rowLimit = array_shift($query);
+
+			// Limit amount of articles to return
+			if (count($query) > 1)
+				$increment = array_shift($query);
+
 			$query = urlencode(implode(" ", $query));
 
 			// Fetch json data from search API
-			$apiData = file_get_contents("http://www.martinoticias.com/post.api?&startrow=0&rowlimit=10&searchtype=all&keywords=$query&zone=allzones&order=date");
+			$apiData = file_get_contents($apiUrl . "&startrow=0&rowlimit=$rowLimit&searchtype=all&keywords=$query&zone=allzones&order=date");
 			$jsonData = json_decode($apiData, true);
 
 			// Fetch rows of data
+			$totalRows = $jsonData['d']['postquery']['PrimaryQueryResult']['RelevantResults']['TotalRows'];
 			$rows = $jsonData['d']['postquery']['PrimaryQueryResult']['RelevantResults']['Table']['Rows']['results'];
 
 			$data = array();
@@ -51,8 +63,12 @@
 			}
 
 			// Return response content
+			$newLimit = $rowLimit + $increment;
 			$responseContent = array(
-				'articles' => $articles
+				'articles'  => $articles,
+				'totalRows' => $totalRows,
+				'rows'      => $rowLimit,
+				'more'      => $apiUrl . "&startrow=0&rowlimit=$newLimit&searchtype=all&keywords=$query&zone=allzones&order=date"
 			);
 			return $responseContent;
 		}
