@@ -7,10 +7,13 @@
 		/**
 		 * Searches for articles using the search API on Martinoticias
 		 */
+<<<<<<< HEAD
 		private function searchArticles($query)
 		{
 			$apiUrl = "http://www.martinoticias.com/post.api?";
-
+=======
+		private function searchArticles($query) {
+>>>>>>> 193c0b4566d95fbd31627f2f05d317257dfe7886
 			// Setup client
 			$client = new Client();
 
@@ -47,27 +50,18 @@
 					$data[$cell['Key']] = $cell['Value'];
 				}
 
-				// Get author, if none, show anonymous
-				$author = $data['searchArticleAuthor'];
-				if (strlen(trim($author)) < 1) $author = "desconcido";
-
-				// Generate link for story api
-				$link = implode("/",
-								array("content",
-									$data['searchArticleSlug'],
-									$data['searchArticleID'])
-								) . ".html";
-				$link = $this->utils->getLinkToService("MARTINOTICIAS", "STORY $link");
-
-				// Store list of articles
 				$articles[] = array(
 					'pubDate'      => $data['searchArticlePubDate'],
 					'description'  => $data['HitHighlightedSummary'],
 					'category'     => explode(";", $data['searchArticleZone']),
 					'title'        => $data['searchArticleTitle'],
 					'tags'         => $data['searchArticleTag'],
-					'author'       => $author,
-					'link'         => $link
+					'author'       => $data['searchArticleAuthor'],
+					'link'         => implode("/",
+										array("content",
+										      $data['searchArticleSlug'],
+											  $data['searchArticleId'])
+									  )
 				);
 			}
 
@@ -103,7 +97,7 @@
 				$item->filter('category')->each(function($cat, $i) use (&$articles, $query, $item) {
 					if (strtoupper($cat->text()) == strtoupper($query)) {
 						$title = $item->filter('title')->text();
-						$link = $this->utils->getLinkToService("MARTINOTICIAS", "STORY {$this->urlSplit($item->filter('link')->text())}");
+						$link = $item->filter('link')->text();
 						$pubDate = $item->filter('pubDate')->text();
 						$description = $item->filter('description')->text();
 						$author = "desconocido";
@@ -116,8 +110,7 @@
 							"title"       => $title,
 							"link"        => $link,
 							"pubDate"     => $pubDate,
-							"description" => $description,
-							"author"      => $author
+							"description" => $description
 						);
 					}
 				});
@@ -148,7 +141,7 @@
 				return $description->text();
 			});
 			$link = $crawler->filter('item link')->each(function($link, $i) {
-				return $this->utils->getLinkToService("MARTINOTICIAS", "STORY {$this->urlSplit($link->text())}");
+				return "http://127.0.0.1:8080/run/display?subject=martinoticias {$link->text()}";
 			});
 			$pubDate = $crawler->filter('item pubDate')->each(function($pubDate, $i) {
 				return $pubDate->text();
@@ -172,7 +165,7 @@
 			for ($i=0; $i < count($title); $i++) {
 				$categoryLink[$i] = array();
 				foreach ($category[$i] as $currCategory) {
-					$categoryLink[$i][] = $this->utils->getLinkToService("MARTINOTICIAS", "category $currCategory");
+					$categoryLink[$i][] = "http://127.0.0.1:8080/run/display?subject=martinoticias category $currCategory";
 				}
 			}
 
@@ -183,7 +176,6 @@
 				"link" => $link,
 				"pubDate" => $pubDate,
 				"category" => $category,
-				"categoryLink" => $categoryLink,
 				"author" => $author
 			);
 			return $responseContent;
@@ -197,7 +189,7 @@
 			$client->setClient($guzzle);
 
 			// create a crawler
-			$crawler = $client->request('GET', "http://www.martinoticias.com/" . explode(" ", trim($query))[1]);
+			$crawler = $client->request('GET', "http://www.martinoticias.com/" . explode(" ", trim($request->query))[1]);
 
 			// search for result
 			$title = $crawler->filter('#article h1')->text();
@@ -222,7 +214,6 @@
 			return $responseContent;
 		}
 
-		// http://www.martinoticias.com/content/blah
 		private function urlSplit($url) {
 			$url = explode("/", trim($url));
 			unset($url[0]);
@@ -266,7 +257,7 @@
 				$responseContent = $this->searchArticles($request->query);
 				$response = new Response();
 				$response->setResponseSubject("[RESPONSE_EMAIL_SUBJECT]");
-				$response->createFromTemplate("searchArticles.tpl", $responseContent);
+				$response->createFromTemplate("catArticles.tpl", $responseContent);
 				return $response;
 			}
 		}
