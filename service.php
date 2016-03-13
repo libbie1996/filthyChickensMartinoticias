@@ -120,7 +120,7 @@
 				return $description->text();
 			});
 			$link = $crawler->filter('item link')->each(function($link, $i) {
-				return "http://127.0.0.1:8080/run/display?subject=martinoticias {$link->text()}";
+				return $this->utils->getLinkToService("MARTINOTICIAS", "STORY {$this->urlSplit($link->text())}");
 			});
 			$pubDate = $crawler->filter('item pubDate')->each(function($pubDate, $i) {
 				return $pubDate->text();
@@ -155,6 +155,7 @@
 				"link" => $link,
 				"pubDate" => $pubDate,
 				"category" => $category,
+				"categoryLink" => $categoryLink,
 				"author" => $author
 			);
 			return $responseContent;
@@ -168,7 +169,7 @@
 			$client->setClient($guzzle);
 
 			// create a crawler
-			$crawler = $client->request('GET', "http://www.martinoticias.com/" . explode(" ", trim($request->query))[1]);
+			$crawler = $client->request('GET', "http://www.martinoticias.com/" . explode(" ", trim($query))[1]);
 
 			// search for result
 			$title = $crawler->filter('#article h1')->text();
