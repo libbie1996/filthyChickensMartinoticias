@@ -27,22 +27,24 @@
 			// Collect articles by category
 			$articles = array();
 
-			$crawler->filter('channel item')->each(function($node, $i) use (&$articles, $query) {
+			$crawler->filter('channel item')->each(function($item, $i) use (&$articles, $query) {
 
 				//If category matches, add to list of articles
-				if (strtoupper($node->filter('category')->text()) == strtoupper($query)) {
-					$title = $node->filter('title')->text();
-					$link = $node->filter('link')->text();
-					$pubDate = $node->filter('pubDate')->text();
-					$description = $node->filter('description')->text();
+				$item->filter('category')->each(function($cat, $i) use (&$articles, $query, $item) {
+					if (strtoupper($cat->text()) == strtoupper($query)) {
+						$title = $item->filter('title')->text();
+						$link = $item->filter('link')->text();
+						$pubDate = $item->filter('pubDate')->text();
+						$description = $item->filter('description')->text();
 
-					$articles[] = array(
-						"title"       => $title,
-						"link"        => $link,
-						"pubDate"     => $pubDate,
-						"description" => $description
-					);
-				}
+						$articles[] = array(
+							"title"       => $title,
+							"link"        => $link,
+							"pubDate"     => $pubDate,
+							"description" => $description
+						);
+					}
+				});
 			});
 
 			// Return response content
