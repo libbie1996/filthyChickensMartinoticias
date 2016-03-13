@@ -165,9 +165,10 @@
 						$author = substr($authorString[1], 1, strpos($authorString[1], ")") - 1) . " ({$authorString[0]})";
 					}
 					$categoryLink = array();
-					foreach ($category[$i] as $currCategory) {
+					foreach ($category as $currCategory) {
 						$categoryLink[] = $this->utils->getLinkToService("MARTINOTICIAS", "category $currCategory");
 					}
+
 
 					$articles[] = array(
 						"title"       => $title,
