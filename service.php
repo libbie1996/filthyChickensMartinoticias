@@ -15,8 +15,7 @@
 		public function _main(Request $request)
 		{
 
-			if(empty($request->query))
-			{
+			if(empty($request->query)) {
 				// create a new client
 				$client = new Client();
 				$guzzle = $client->getClient();
@@ -28,7 +27,7 @@
 	
 				// search for result
 
-				$titles = $crawler->filter('item title')->each(function($title, $i) {
+				$title = $crawler->filter('item title')->each(function($title, $i) {
 					return $title->text();
 				});
 				$description = $crawler->filter('item description')->each(function($description, $i) {
@@ -40,13 +39,38 @@
 				$pubDate = $crawler->filter('item pubDate')->each(function($pubDate, $i) {
 					return $pubDate->text();
 				});
+				$category = $crawler->filter('item')->each(function($item, $i) {
+					return $item->filter('category')->each(function($category, $i) {
+						return $category->text();
+					});
+				});
+				$author = $crawler->filter('item')->each(function($item, $i) {
+					if ($item->filter('author')->count() == 0) {
+						return "desconocido";
+					} else {
+						$authorString = explode(" ", trim($item->filter('author')->text()));
+						return substr($authorString[1], 1, strpos($authorString[1], ")") - 1) . " ({$authorString[0]})";
+					}
+				});
+
+				$categoryLink = array();
+
+				for ($i=0; $i < count($title); $i++) { 
+					$categoryLink[$i] = array();
+					foreach ($category[$i] as $currCategory) {
+						$categoryLink[$i][] = "http://127.0.0.1:8080/run/display?subject=martinoticias category $currCategory";
+					}
+				}
 
 				// create a json object to send to the template
 				$responseContent = array(
-					"titles" => $titles,
+					"title" => $title,
 					"description" => $description,
 					"link" => $link,
-					"pubDate" => $pubDate
+					"pubDate" => $pubDate,
+					"category" => $category,
+					"categoryLink" => $categoryLink,
+					"author" => $author
 				);
 	
 				// create the response
