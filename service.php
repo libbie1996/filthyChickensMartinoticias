@@ -10,7 +10,7 @@
 		private function searchArticles($query)
 		{
 			$apiUrl = "http://www.martinoticias.com/post.api?";
-		private function searchArticles($query) {
+
 			// Setup client
 			$client = new Client();
 
@@ -47,13 +47,16 @@
 					$data[$cell['Key']] = $cell['Value'];
 				}
 
+				$author = $data['searchArticleAuthor'];
+				if (strlen(trim($author)) < 1) $author = "desconcido";
+
 				$articles[] = array(
 					'pubDate'      => $data['searchArticlePubDate'],
 					'description'  => $data['HitHighlightedSummary'],
 					'category'     => explode(";", $data['searchArticleZone']),
 					'title'        => $data['searchArticleTitle'],
 					'tags'         => $data['searchArticleTag'],
-					'author'       => $data['searchArticleAuthor'],
+					'author'       => $author,
 					'link'         => implode("/",
 										array("content",
 										      $data['searchArticleSlug'],
@@ -107,7 +110,8 @@
 							"title"       => $title,
 							"link"        => $link,
 							"pubDate"     => $pubDate,
-							"description" => $description
+							"description" => $description,
+							"author"      => $author
 						);
 					}
 				});
@@ -254,7 +258,7 @@
 				$responseContent = $this->searchArticles($request->query);
 				$response = new Response();
 				$response->setResponseSubject("[RESPONSE_EMAIL_SUBJECT]");
-				$response->createFromTemplate("catArticles.tpl", $responseContent);
+				$response->createFromTemplate("searchArticles.tpl", $responseContent);
 				return $response;
 			}
 		}
