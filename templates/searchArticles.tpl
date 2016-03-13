@@ -4,8 +4,8 @@
  	<p>{$articles[articleIndex].description}<br>
     Categor&iacute;as:
     {section name=catIndex loop=$articles[articleIndex].category}
-        <a href="{$articles[articleIndex].category[catIndex]}">
-            {$articles[articleIndex].category[catIndex]}
+        <a href="{$articles[articleIndex].category[catIndex].link}">
+            {$articles[articleIndex].category[catIndex].name}
         </a>
         {if !$smarty.section.catIndex.last},{/if}
     {/section}<br>
