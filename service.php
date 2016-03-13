@@ -134,6 +134,7 @@
 			// create a crawler
 			$crawler = $client->request('GET', "http://www.martinoticias.com/api/epiqq");
 
+			/*
 			// search for result
 			$title = $crawler->filter('item title')->each(function($title, $i) {
 				return $title->text();
@@ -147,8 +148,12 @@
 			$pubDate = $crawler->filter('item pubDate')->each(function($pubDate, $i) {
 				return $pubDate->text();
 			});
-			$category = $crawler->filter('item')->each(function($item, $i) {
-				return $item->filter('category')->each(function($category, $i) {
+			$exclude = array();
+			$category = $crawler->filter('item')->each(function($item, $i) use (&$exclude) {
+				return $item->filter('category')->each(function($category, $j) use (&$exclude &$i) {
+					if ($category->text() == "Fotogalerías") {
+						$exclude[] = $i;
+					}
 					return $category->text();
 				});
 			});
@@ -180,6 +185,47 @@
 				"categoryLink" => $categoryLink,
 				"author" => $author
 			);
+
+			*/
+
+			$articles = array();
+			$crawler->filter('item')->each(function($item, $i) use (&$articles) {
+				if ($item->filter('category')->text() != "Fotogalerías") {
+					$title = $item->filter('title')->text();
+					$description = $item->filter('description')->text();
+					$link = $this->utils->getLinkToService("MARTINOTICIAS", "STORY {$this->urlSplit($item->filter('link')->text())}"); 
+					$pubDate = $item->filter('pubDate')->text();
+					$category = $item->filter('category')->each(function($category, $j) {
+							return $category->text();
+					}); 
+					if ($item->filter('author')->count() == 0) {
+						$author = "desconocido";
+					} else {
+						$authorString = explode(" ", trim($item->filter('author')->text()));
+						$author = substr($authorString[1], 1, strpos($authorString[1], ")") - 1) . " ({$authorString[0]})";
+					}
+					$categoryLink = array();
+					foreach ($category[$i] as $currCategory) {
+						$categoryLink[] = $this->utils->getLinkToService("MARTINOTICIAS", "category $currCategory");
+					}
+
+					$articles[] = array(
+						"title"       => $title,
+						"link"        => $link,
+						"pubDate"     => $pubDate,
+						"description" => $description,
+						"category" => $category,
+						"categoryLink" => $categoryLink,
+						"author"      => $author
+					);
+				}
+			});
+
+			// Return response content
+			$responseContent = array(
+				"articles" => $articles
+			);
+
 			return $responseContent;
 		}
 
@@ -202,6 +248,7 @@
 			}
 			if ($crawler->filter('#article .contentImage img')->count() != 0) {
 				$imgUrl = $crawler->filter('#article .contentImage img')->attr("src");
+				$imgAlt = $crawler->filter('#article .contentImage img')->attr("alt");
 			}
 			if ($crawler->filter('#article .articleContent .zoomMe p')->count() != 0) {
 				$content = $crawler->filter('#article .articleContent .zoomMe p')->each(function($content, $i) {
@@ -219,6 +266,7 @@
 				"title" => $title,
 				"intro" => $intro,
 				"img" => $img,
+				"imgAlt" => $imgAlt,
 				"content" => $content
 			);
 			return $responseContent;
