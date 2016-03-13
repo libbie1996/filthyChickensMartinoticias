@@ -232,10 +232,12 @@
 				});
 			}
 
-			$imgName = $this->utils->generateRandomHash() . "." . explode(".", explode("/", trim($imgUrl))[count(explode("/", trim($imgUrl))) - 1])[count(explode(".", explode("/", trim($imgUrl))[count(explode("/", trim($imgUrl))) - 1])) - 1];
-			$img = \Phalcon\DI\FactoryDefault::getDefault()->get('path')['root'] . "/temp/$imgName";
-			file_put_contents($img, file_get_contents($imgUrl));
-			$this->utils->optimizeImage($img, 600);
+			if (isset($imgUrl)) {		
+				$imgName = $this->utils->generateRandomHash() . "." . explode(".", explode("/", trim($imgUrl))[count(explode("/", trim($imgUrl))) - 1])[count(explode(".", explode("/", trim($imgUrl))[count(explode("/", trim($imgUrl))) - 1])) - 1];
+				$img = \Phalcon\DI\FactoryDefault::getDefault()->get('path')['root'] . "/temp/$imgName";
+				file_put_contents($img, file_get_contents($imgUrl));
+				$this->utils->optimizeImage($img, 600);
+			}
 
 			// create a json object to send to the template
 			$responseContent = array(
@@ -265,6 +267,7 @@
 		 * */
 
 		public function _main(Request $request) {
+
 			if(empty($request->query)) {
 				$responseContent = $this->allStories($request->query);
 				$response = new Response();
@@ -273,7 +276,7 @@
 				return $response;
 			}
 
-			if(explode(" ", strtoupper(trim($request->query)))[0] == "STORY") {
+			if(explode(" ", strtoupper(trim($request->query)))[0] == "HISTORIA") {
 
 				if (explode("/", explode(" ", strtoupper(trim($request->query)))[1])[0] == "MEDIA") {
 					$responseContent = array("chicken" => "filthy");
@@ -289,7 +292,8 @@
 				return $response;
 			}
 
-			if (explode(" ", strtoupper(trim($request->query)))[0] == "CATEGORY") {
+			$normalizeChars = array('Ì'=>'I', 'Í'=>'I', 'Î'=>'I', 'Ï'=>'I', 'ì'=>'i', 'í'=>'i', 'î'=>'i', 'î'=>'i', 'Î'=>'I');
+			if (explode(" ", strtoupper(trim(strtr($request->query, $normalizeChars))))[0] == "CATEGORIA") {
 				$responseContent = $this->listArticles($request->query);
 				$response = new Response();
 				$response->setResponseSubject("[RESPONSE_EMAIL_SUBJECT]");
@@ -297,7 +301,7 @@
 				return $response;
 			}
 
-			if (explode(" ", strtoupper(trim($request->query)))[0] == "SEARCH") {
+			if (explode(" ", strtoupper(trim($request->query)))[0] == "BUSCAR") {
 				$responseContent = $this->searchArticles($request->query);
 				$response = new Response();
 				$response->setResponseSubject("[RESPONSE_EMAIL_SUBJECT]");
